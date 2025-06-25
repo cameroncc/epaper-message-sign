@@ -18,7 +18,8 @@ if os.path.exists(libdir):
     sys.path.append(libdir)
 
 import logging
-import random
+
+# import random
 import time
 import traceback
 
@@ -28,82 +29,87 @@ from TP_lib import epd2in13_V4
 logging.basicConfig(level=logging.DEBUG)
 
 
-try:
-    logging.info("Starting simple quote display")
-
-    # Initialize the e-paper display
-    epd = epd2in13_V4.EPD()
-    logging.info("Initializing display...")
-    epd.init(epd.FULL_UPDATE)
-    epd.Clear(0xFF)  # Clear with white background
-
-    # Create a new image with white background
-    # The display is 122x250 pixels
-    image = Image.new("1", (epd.height, epd.width), 205)  # 255 = white background
-    draw = ImageDraw.Draw(image)
-
-    # Load fonts - try different sizes
+def display_message(message: str):
     try:
-        font_large = ImageFont.truetype(
-            os.path.join(fontdir, "FiraCodeNerdFont-Regular.ttf"), 32
+        logging.info("Starting simple quote display")
+
+        # Initialize the e-paper display
+        epd = epd2in13_V4.EPD()
+        logging.info("Initializing display...")
+        epd.init(epd.FULL_UPDATE)
+        epd.Clear(0xFF)  # Clear with white background
+
+        # Create a new image with white background
+        # The display is 122x250 pixels
+        image = Image.new("1", (epd.height, epd.width), 205)  # 255 = white background
+        draw = ImageDraw.Draw(image)
+
+        # Load fonts - try different sizes
+        try:
+            font_large = ImageFont.truetype(
+                os.path.join(fontdir, "FiraCodeNerdFont-Regular.ttf"), 32
+            )
+            font_small = ImageFont.truetype(os.path.join(fontdir, "Font.ttc"), 16)
+        except:
+            # Fallback to default font if custom font not found
+            font_large = ImageFont.load_default()
+            font_small = ImageFont.load_default()
+
+        # Simple message
+        # num = random.randint(0, 1)
+        quote_text = message  # "In a meeting" if num else "Free"
+
+        # Get text dimensions for centering
+        quote_bbox = draw.textbbox((0, 0), quote_text, font=font_large)
+
+        quote_width = quote_bbox[2] - quote_bbox[0]
+        quote_height = quote_bbox[3] - quote_bbox[1]
+
+        # Calculate positions for centering
+        display_width = epd.height  # 122
+        display_height = epd.width  # 250
+
+        # Center both lines with spacing
+        total_text_height = quote_height
+        start_y = (display_height - total_text_height) // 2
+
+        quote_x = (display_width - quote_width) // 2
+        quote_y = start_y
+
+        # Draw the text
+        draw.text((quote_x, quote_y), quote_text, font=font_large, fill=0)  # 0 = black
+
+        # Display the image
+        logging.info("Displaying message...")
+        epd.display(epd.getbuffer(image))
+
+        logging.info("Message displayed successfully!")
+        logging.info(
+            "The display will remain showing the quote until you run another script or power off."
         )
-        font_small = ImageFont.truetype(os.path.join(fontdir, "Font.ttc"), 16)
-    except:
-        # Fallback to default font if custom font not found
-        font_large = ImageFont.load_default()
-        font_small = ImageFont.load_default()
 
-    # Simple message
-    num = random.randint(0, 1)
-    quote_text = "In a meeting" if num else "Free"
+        # Put the display to sleep to save power
+        time.sleep(2)
+        epd.sleep()
 
-    # Get text dimensions for centering
-    quote_bbox = draw.textbbox((0, 0), quote_text, font=font_large)
+    except IOError as e:
+        logging.error(f"IO Error: {e}")
 
-    quote_width = quote_bbox[2] - quote_bbox[0]
-    quote_height = quote_bbox[3] - quote_bbox[1]
+    except KeyboardInterrupt:
+        logging.info("Interrupted by user")
+        epd.sleep()
 
-    # Calculate positions for centering
-    display_width = epd.height  # 122
-    display_height = epd.width  # 250
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        traceback.print_exc()
 
-    # Center both lines with spacing
-    total_text_height = quote_height
-    start_y = (display_height - total_text_height) // 2
+    finally:
+        # Clean up
+        try:
+            pass
+            # epd.Dev_exit()
+        except:
+            pass
 
-    quote_x = (display_width - quote_width) // 2
-    quote_y = start_y
 
-    # Draw the text
-    draw.text((quote_x, quote_y), quote_text, font=font_large, fill=0)  # 0 = black
-
-    # Display the image
-    logging.info("Displaying message...")
-    epd.display(epd.getbuffer(image))
-
-    logging.info("Message displayed successfully!")
-    logging.info(
-        "The display will remain showing the quote until you run another script or power off."
-    )
-
-    # Put the display to sleep to save power
-    time.sleep(2)
-    epd.sleep()
-
-except IOError as e:
-    logging.error(f"IO Error: {e}")
-
-except KeyboardInterrupt:
-    logging.info("Interrupted by user")
-    epd.sleep()
-
-except Exception as e:
-    logging.error(f"Unexpected error: {e}")
-    traceback.print_exc()
-
-finally:
-    # Clean up
-    try:
-        epd.Dev_exit()
-    except:
-        pass
+display_message("initializing...")
