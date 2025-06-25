@@ -8,12 +8,13 @@ import sys
 import os
 
 # Add the lib directory to the path
-libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib')
+libdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "lib")
 if os.path.exists(libdir):
     sys.path.append(libdir)
 
 try:
     from TP_lib.simple_realtime import run_display
+
     print("Starting Real-time Display...")
     run_display()
 except ImportError as e:
@@ -23,4 +24,4 @@ except ImportError as e:
     print("sudo pip3 install requests psutil")
 except Exception as e:
     print(f"Error: {e}")
-    print("Make sure the e-Paper display is properly connected") 
+    print("Make sure the e-Paper display is properly connected")
