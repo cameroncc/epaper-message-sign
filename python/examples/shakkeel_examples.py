@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-import sys
 import os
+import sys
 
 # Set up paths (adjust these if your directory structure is different)
 picdir = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "pic/2in13"
 )
 fontdir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "pic"
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "fonts"
 )
 libdir = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"
@@ -17,13 +17,16 @@ libdir = os.path.join(
 if os.path.exists(libdir):
     sys.path.append(libdir)
 
-from TP_lib import epd2in13_V4
-import time
 import logging
-from PIL import Image, ImageDraw, ImageFont
+import random
+import time
 import traceback
 
+from PIL import Image, ImageDraw, ImageFont
+from TP_lib import epd2in13_V4
+
 logging.basicConfig(level=logging.DEBUG)
+
 
 try:
     logging.info("Starting simple quote display")
@@ -36,54 +39,49 @@ try:
 
     # Create a new image with white background
     # The display is 122x250 pixels
-    image = Image.new("1", (epd.height, epd.width), 255)  # 255 = white background
+    image = Image.new("1", (epd.height, epd.width), 205)  # 255 = white background
     draw = ImageDraw.Draw(image)
 
     # Load fonts - try different sizes
     try:
-        font_large = ImageFont.truetype(os.path.join(fontdir, "Font.ttc"), 20)
+        font_large = ImageFont.truetype(
+            os.path.join(fontdir, "FiraCodeNerdFont-Regular.ttf"), 32
+        )
         font_small = ImageFont.truetype(os.path.join(fontdir, "Font.ttc"), 16)
     except:
         # Fallback to default font if custom font not found
         font_large = ImageFont.load_default()
         font_small = ImageFont.load_default()
 
-    # Simple love message
-    quote_text = "Lots of love"
-    author_text = "- Majboos"
+    # Simple message
+    num = random.randint(0, 1)
+    quote_text = "In a meeting" if num else "Free"
 
     # Get text dimensions for centering
     quote_bbox = draw.textbbox((0, 0), quote_text, font=font_large)
-    author_bbox = draw.textbbox((0, 0), author_text, font=font_small)
 
     quote_width = quote_bbox[2] - quote_bbox[0]
     quote_height = quote_bbox[3] - quote_bbox[1]
-    author_width = author_bbox[2] - author_bbox[0]
-    author_height = author_bbox[3] - author_bbox[1]
 
     # Calculate positions for centering
     display_width = epd.height  # 122
     display_height = epd.width  # 250
 
     # Center both lines with spacing
-    total_text_height = quote_height + author_height + 20  # 20px spacing between lines
+    total_text_height = quote_height
     start_y = (display_height - total_text_height) // 2
 
     quote_x = (display_width - quote_width) // 2
     quote_y = start_y
 
-    author_x = (display_width - author_width) // 2
-    author_y = start_y + quote_height + 20
-
     # Draw the text
     draw.text((quote_x, quote_y), quote_text, font=font_large, fill=0)  # 0 = black
-    draw.text((author_x, author_y), author_text, font=font_small, fill=0)
 
     # Display the image
-    logging.info("Displaying love message...")
+    logging.info("Displaying message...")
     epd.display(epd.getbuffer(image))
 
-    logging.info("Love message displayed successfully!")
+    logging.info("Message displayed successfully!")
     logging.info(
         "The display will remain showing the quote until you run another script or power off."
     )
