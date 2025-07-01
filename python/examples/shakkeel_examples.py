@@ -28,16 +28,35 @@ from TP_lib import epd2in13_V4
 
 logging.basicConfig(level=logging.DEBUG)
 
+partial_refresh_count = 0
+first_run = True
 
-def display_message(message: str):
+
+def display_message(message: str, full_update=False):
     try:
         logging.info("Starting simple quote display")
 
         # Initialize the e-paper display
         epd = epd2in13_V4.EPD()
-        logging.info("Initializing display...")
-        epd.init(epd.FULL_UPDATE)
-        epd.Clear(0xFF)  # Clear with white background
+
+        global first_run
+        global partial_refresh_count
+
+        if first_run or full_update or partial_refresh_count > 5:
+            logging.info("Initializing display...")
+            epd.init(epd.FULL_UPDATE)
+            partial_refresh_count = 0
+            logging.info("resetting partial_refresh_count")
+        else:
+            logging.info("Partial display refresh...")
+            epd.init(epd.PART_UPDATE)
+            partial_refresh_count += 1
+            logging.info(f"that's {partial_refresh_count} partial refreshes")
+
+        if first_run:
+            logging.info("first run, whiting out display")
+            epd.Clear(0xFF)  # Clear with white background
+            first_run = False
 
         # Create a new image with white background
         # The display is 122x250 pixels
@@ -91,6 +110,8 @@ def display_message(message: str):
         # Put the display to sleep to save power
         time.sleep(2)
         epd.sleep()
+        print()
+        print()
 
     except IOError as e:
         logging.error(f"IO Error: {e}")
@@ -103,13 +124,14 @@ def display_message(message: str):
         logging.error(f"Unexpected error: {e}")
         traceback.print_exc()
 
-    finally:
-        # Clean up
-        try:
-            pass
-            # epd.Dev_exit()
-        except:
-            pass
+
+def clean_up_display_resources():
+    try:
+        epd = epd2in13_V4.EPD()
+        print("cleaning up display resources")
+        epd.Dev_exit()
+    except Exception as e:
+        print(f"cleanup raised an exception {e}. {traceback.format_exc()}")
 
 
-display_message("initializing...")
+display_message("Free", full_update=True)
