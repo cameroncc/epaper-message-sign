@@ -60,19 +60,19 @@ def display_message(message: str, full_update=False):
 
         # Create a new image with white background
         # The display is 122x250 pixels
-        image = Image.new("1", (epd.height, epd.width), 205)  # 255 = white background
+        image = Image.new("1", (epd.height, epd.width), 255)  # 255 = white background
         draw = ImageDraw.Draw(image)
 
         # Load fonts - try different sizes
         try:
             font_large = ImageFont.truetype(
-                os.path.join(fontdir, "FiraCodeNerdFont-Regular.ttf"), 32
+                os.path.join(fontdir, "fira_code/FiraCode-Regular.ttf"), 32
             )
-            font_small = ImageFont.truetype(os.path.join(fontdir, "Font.ttc"), 16)
+            print("successfully loaded firacode")
         except:
             # Fallback to default font if custom font not found
             font_large = ImageFont.load_default()
-            font_small = ImageFont.load_default()
+            print("failed to load firacode. Using default font")
 
         # Simple message
         # num = random.randint(0, 1)
